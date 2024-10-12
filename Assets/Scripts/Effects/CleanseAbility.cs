@@ -8,7 +8,7 @@ public class CleanseAbility : IAbility
         if (IsOnCooldown()) return;
 
         caster.RemoveEffect<BurningEffect>();
-        ResetCooldown();
+        _currentCooldown = _cooldown;
     }
 
     public bool IsOnCooldown() => _currentCooldown > 0;
@@ -23,12 +23,12 @@ public class CleanseAbility : IAbility
 
     public void ResetCooldown()
     {
-        _currentCooldown = _cooldown;
+        _currentCooldown = 0;
     }
 
     public string GetName() => "Cleanse"; 
 
     public int GetCooldown() => _currentCooldown;
 
-    public TargetType GetTargetType() => TargetType.Self; // Применяется на себя
+    public TargetType GetTargetType() => TargetType.Self;
 }

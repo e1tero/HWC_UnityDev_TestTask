@@ -2,7 +2,7 @@ public class Effect
 {
     public int Duration { get; set; }
 
-    public Effect(int duration)
+    protected Effect(int duration)
     {
         Duration = duration;
     }

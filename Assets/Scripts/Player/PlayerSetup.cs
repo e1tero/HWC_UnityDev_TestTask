@@ -12,21 +12,23 @@ public class PlayerSetup : MonoBehaviour
     [SerializeField] private TMP_Text[] cooldownTexts;
     [SerializeField] private TMP_Text[] abilityNameTexts;
     [SerializeField] private GameObject statusEffects;
+    [SerializeField] private Button restartButton;
 
     [Header("Effect Icons")]
     [SerializeField] private GameObject statusEffectPrefab;
     [SerializeField] private EffectIconsStorage effectIconsStorage;
 
-    [Header("Ability Settings")] 
-    [SerializeField] private FireballAbilityData _fireballAbilityData;
-    [SerializeField] private AttackAbilityData _attackAbilityData;
-    [SerializeField] private RegenerationAbilityData _regenerationAbilityData;
-    [SerializeField] private BarrierAbilityData _barrierAbilityData;
+    [Header("Ability Settings")]
+    [SerializeField] private FireballAbilityData fireballAbilityData;
+    [SerializeField] private AttackAbilityData attackAbilityData;
+    [SerializeField] private RegenerationAbilityData regenerationAbilityData;
+    [SerializeField] private BarrierAbilityData barrierAbilityData;
 
     [SerializeField] private bool isAi;
     [SerializeField] private int initialHealth;
 
     private PlayerController _playerController;
+    private BattleManager _battleManager;
 
     public PlayerController GetPlayerController()
     {
@@ -35,7 +37,7 @@ public class PlayerSetup : MonoBehaviour
 
     private void Awake()
     {
-        var healthBar = new HealthBar(healthSlider,healthText,initialHealth);
+        var healthBar = new HealthBar(healthSlider, healthText, initialHealth);
         
         var abilitiesUI = new AbilityUI[abilityButtons.Length];
         for (int i = 0; i < abilityButtons.Length; i++)
@@ -45,14 +47,15 @@ public class PlayerSetup : MonoBehaviour
         
         var player = new Unit(initialHealth, new List<IAbility>
         {
-            new AttackAbility(_attackAbilityData),
-            new FireballAbility(_fireballAbilityData),
-            new RegenerationAbility(_regenerationAbilityData),
-            new BarrierAbility(_barrierAbilityData),
+            new AttackAbility(attackAbilityData),
+            new FireballAbility(fireballAbilityData),
+            new RegenerationAbility(regenerationAbilityData),
+            new BarrierAbility(barrierAbilityData),
             new CleanseAbility()
         });
         
         var playerView = new PlayerView(healthBar, abilitiesUI, statusEffects, statusEffectPrefab, effectIconsStorage);
+        
         var viewUpdater = new PlayerViewUpdater(playerView, abilityButtons, cooldownTexts, player);
         
         IPlayerInput playerInput;
@@ -66,7 +69,12 @@ public class PlayerSetup : MonoBehaviour
         }
         
         _playerController = new PlayerController(player, playerInput, viewUpdater);
+        restartButton.onClick.AddListener(RestartGame);
+    }
+
+    private void RestartGame()
+    {
+        _battleManager = FindObjectOfType<BattleManager>();
+        _battleManager.RestartBattle();
     }
 }
-
-

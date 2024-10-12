@@ -1,6 +1,6 @@
 ﻿using TMPro;
 
-public class BattleLogService
+public sealed class BattleLogService
 {
     private TMP_Text _logText;
     private int _maxLogLength = 300;

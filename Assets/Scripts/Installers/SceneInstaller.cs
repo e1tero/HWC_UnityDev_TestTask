@@ -1,20 +1,32 @@
-﻿using TMPro;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class SceneInstaller : MonoBehaviour
 {
-    [SerializeField] private PlayerSetup playerSetup;
-    [SerializeField] private PlayerSetup aiSetup;
-    [SerializeField] private TMP_Text _logText;
-
-    private TurnBasedBattleService _turnBasedBattleService;
+    [SerializeField] private PlayerSetup playerSetup;  
+    [SerializeField] private PlayerSetup aiSetup;     
+    [SerializeField] private BattleManager battleManager;
 
     private void Start()
     {
-        var playerController = playerSetup.GetPlayerController();
-        var aiController = aiSetup.GetPlayerController();
+        battleManager = FindObjectOfType<BattleManager>();
+        if (battleManager == null)
+        {
+            Debug.LogError("BattleManager не найден на сцене!");
+            return;  
+        }
+        
+        if (playerSetup == null)
+        {
+            Debug.LogError("PlayerSetup для реального игрока не установлен!");
+            return;
+        }
 
-        var battleLogService = new BattleLogService(_logText);
-        _turnBasedBattleService = new TurnBasedBattleService(playerController, aiController,battleLogService);
+        if (aiSetup == null)
+        {
+            Debug.LogError("PlayerSetup для AI не установлен!");
+            return;
+        }
+        
+        battleManager.StartBattle(playerSetup.GetPlayerController(), aiSetup.GetPlayerController());
     }
 }

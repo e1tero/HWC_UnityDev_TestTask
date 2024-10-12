@@ -4,8 +4,8 @@ using TMPro;
 
 public class HealthBar
 {
-    private Slider _slider;
-    private TMP_Text _healthText; 
+    private readonly Slider _slider;
+    private readonly TMP_Text _healthText; 
 
     public HealthBar(Slider slider, TMP_Text healthText, int maxHealth)
     {

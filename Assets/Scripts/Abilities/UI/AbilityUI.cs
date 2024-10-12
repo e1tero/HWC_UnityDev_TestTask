@@ -21,15 +21,15 @@ public class AbilityUI
         SetCooldown(ability.IsOnCooldown() ? ability.GetCooldown() : 0);
     }
 
-    public void SetCooldown(int cooldown)
+    private void SetCooldown(int cooldown)
     {
         _cooldownText.text = cooldown > 0 ? cooldown.ToString() : "";
-        _button.interactable = cooldown == 0; 
+        _button.interactable = cooldown == 0;
     }
 
     public void Enable()
     {
-        _button.interactable = true;  
+        _button.interactable = true;
     }
 
     public void Disable()

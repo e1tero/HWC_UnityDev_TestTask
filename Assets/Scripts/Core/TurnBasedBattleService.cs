@@ -1,82 +1,82 @@
 using System;
 using System.Threading.Tasks;
+using UnityEngine;
 
-public class TurnBasedBattleService
+public sealed class TurnBasedBattleService
 {
     private IPlayerController _playerController;
     private IPlayerController _opponentController;
+    private IGameServer _gameServer;
     private BattleLogService _battleLogService;
     private bool _roundCompleted;
+    private bool _isPlayerTurn;
+    private bool _battleInProgress;
 
-    public TurnBasedBattleService(IPlayerController playerController, IPlayerController opponentController, BattleLogService battleLogService)
+    public TurnBasedBattleService(IPlayerController playerController, IPlayerController aiController, IGameServer gameServer, BattleLogService battleLogService)
     {
         _playerController = playerController;
-        _opponentController = opponentController;
+        _opponentController = aiController;
+        _gameServer = gameServer;
         _battleLogService = battleLogService;
-
+        
         _playerController.PlayerInput.OnAbilitySelected += OnPlayerAbilitySelected;
-        _opponentController.PlayerInput.OnAbilitySelected += OnOpponentAbilitySelected;
 
+        _isPlayerTurn = true;
+        _battleInProgress = false;
+
+        _playerController.UpdateView();
+        _opponentController.UpdateView();
+        
+        _battleLogService.Log("Игра запущена, ожидание хода игрока.");
         DelayExecution(StartPlayerTurn, 1000);
     }
 
     private void StartPlayerTurn()
     {
-        _roundCompleted = false;
-        _playerController.EnableInput();
-        _battleLogService.Log("Ход игрока начался.");
+        if (!_isPlayerTurn || _battleInProgress) return;
 
+        _battleInProgress = true;
+        _roundCompleted = false;
+        
+        _battleLogService.Log("Ход игрока начался.");
+        _playerController.EnableInput();
         _playerController.UpdateView();
         _opponentController.UpdateView();
     }
 
     private void OnPlayerAbilitySelected(int abilityIndex)
     {
+        if (!_isPlayerTurn || !_battleInProgress) return;
+
         _playerController.DisableInput();
-
         var selectedAbility = _playerController.GetUnit().GetAbilities()[abilityIndex];
-        ExecuteTurn(selectedAbility, _playerController, _opponentController);
-
+        _gameServer.ApplyAbility(_playerController, _opponentController, selectedAbility);
+        
         _battleLogService.LogPlayerAbility("Игрок", selectedAbility.GetName());
 
-        DelayExecution(ExecuteOpponentTurn, 1000);
-    }
-
-    private void ExecuteTurn(IAbility ability, IPlayerController source, IPlayerController target)
-    {
-        Unit targetUnit = ability.GetTargetType() == TargetType.Self ? source.GetUnit() : target.GetUnit();
-        ability.Apply(source.GetUnit(), targetUnit);
-
-        source.UpdateView();
-        target.UpdateView();
+        _isPlayerTurn = false;
+        DelayExecution(ExecuteOpponentTurn, 1000); 
     }
 
     private void ExecuteOpponentTurn()
     {
         _battleLogService.Log("Ход ИИ начался.");
 
-        _opponentController.PlayerInput.EnableInput();
-        _opponentController.UpdateView();
-    }
+        var aiAbilities = _opponentController.GetUnit().GetAbilities();
+        var randomAbilityIndex = UnityEngine.Random.Range(0, aiAbilities.Count);
+        var selectedAbility = aiAbilities[randomAbilityIndex];
+        _gameServer.ApplyAbility(_opponentController, _playerController, selectedAbility);
 
-    private void OnOpponentAbilitySelected(int abilityIndex)
-    {
-        _opponentController.DisableInput();
+        _battleLogService.LogAIAbility(selectedAbility.GetName()); 
 
-        var selectedAbility = _opponentController.GetUnit().GetAbilities()[abilityIndex];
-        ExecuteTurn(selectedAbility, _opponentController, _playerController);
-
-        _battleLogService.LogAIAbility(selectedAbility.GetName());
-
-        _playerController.UpdateView();
-        _opponentController.UpdateView();
-        
         if (!_roundCompleted)
         {
             TickEffectsAndCooldowns();
             _roundCompleted = true;
         }
 
+        _isPlayerTurn = true;
+        _battleInProgress = false;
         DelayExecution(StartPlayerTurn, 1000);
     }
 
@@ -84,13 +84,12 @@ public class TurnBasedBattleService
     {
         _playerController.GetUnit().TickEffects();
         _opponentController.GetUnit().TickEffects();
-        
         _playerController.GetUnit().TickAbilitiesCooldowns();
         _opponentController.GetUnit().TickAbilitiesCooldowns();
-
+        
         _playerController.UpdateView();
         _opponentController.UpdateView();
-
+        
         _battleLogService.Log("Тик эффектов и перезарядки завершен.");
     }
 
@@ -100,5 +99,3 @@ public class TurnBasedBattleService
         action?.Invoke();
     }
 }
-
-

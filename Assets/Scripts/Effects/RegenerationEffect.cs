@@ -1,6 +1,6 @@
 ﻿public class RegenerationEffect : Effect
 {
-    private int _healPerTurn;
+    private readonly int _healPerTurn;
 
     public RegenerationEffect(int healPerTurn, int duration) : base(duration)
     {

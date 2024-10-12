@@ -4,13 +4,15 @@ using UnityEngine;
 public class Unit
 {
     public int Health { get; private set; }
+    private readonly int _maxHealth;
     private int _shieldAmount;
-    private List<IAbility> _abilities;
-    private List<Effect> _activeEffects;
+    private readonly List<IAbility> _abilities;
+    private readonly List<Effect> _activeEffects;
 
     public Unit(int initialHealth, List<IAbility> abilities)
     {
         Health = initialHealth;
+        _maxHealth = initialHealth;
         _abilities = abilities;
         _activeEffects = new List<Effect>();
         _shieldAmount = 0;
@@ -33,7 +35,7 @@ public class Unit
 
     public void Heal(int amount)
     {
-        Health = Mathf.Min(Health + amount, 100);
+        Health = Mathf.Min(Health + amount, _maxHealth);
     }
 
     public void ApplyShield(int shieldAmount)
@@ -41,22 +43,37 @@ public class Unit
         _shieldAmount += shieldAmount;
     }
 
-    public void RemoveEffect<T>() where T : Effect
+    public void ResetUnit()
     {
-        _activeEffects.RemoveAll(effect => effect is T);
+        Health = _maxHealth;
+        _activeEffects.Clear();
+        foreach (var ability in _abilities)
+        {
+            ability.ResetCooldown();
+        }
     }
 
     public void ApplyEffect(Effect effect)
     {
         _activeEffects.Add(effect);
     }
+    
+    public void RemoveEffect<T>() where T : Effect
+    {
+        _activeEffects.RemoveAll(effect => effect is T);
+    }
+    
+    public List<Effect> GetActiveEffects()
+    {
+        return _activeEffects;
+    }
 
     public void TickEffects()
     {
         foreach (var effect in _activeEffects.ToArray())
         {
-            effect.ApplyEffect(this); 
-            effect.TickEffect(this); 
+            effect.ApplyEffect(this);
+            effect.TickEffect(this);
 
             if (!effect.IsActive())
             {
@@ -67,8 +84,6 @@ public class Unit
 
     public List<IAbility> GetAbilities() => _abilities;
 
-    public List<Effect> GetActiveEffects() => _activeEffects;
-    
     public void TickAbilitiesCooldowns()
     {
         foreach (var ability in _abilities)

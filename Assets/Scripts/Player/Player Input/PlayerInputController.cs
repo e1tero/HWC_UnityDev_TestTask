@@ -4,7 +4,7 @@ public class PlayerInputController : IPlayerInput
 {
     public event System.Action<int> OnAbilitySelected;
 
-    private Button[] _abilityButtons;
+    private readonly Button[] _abilityButtons;
 
     public PlayerInputController(Button[] abilityButtons)
     {

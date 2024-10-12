@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class PlayerController : IPlayerController
 {
-    private Unit _player;
-    private IPlayerInput _playerInput;
-    private PlayerViewUpdater _viewUpdater;
+    private readonly Unit _player;
+    private readonly IPlayerInput _playerInput;
+    private readonly PlayerViewUpdater _viewUpdater;
     private bool _isPlayerTurn;
 
     public IPlayerInput PlayerInput => _playerInput;
