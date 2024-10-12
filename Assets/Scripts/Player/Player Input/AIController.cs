@@ -7,8 +7,8 @@ public class AIController : IPlayerInput
 {
     public event Action<int> OnAbilitySelected;
 
-    private Unit _aiUnit;
-    private Random _random = new Random();
+    private readonly Unit _aiUnit;
+    private readonly Random _random = new();
 
     public AIController(Unit aiUnit)
     {
@@ -18,13 +18,21 @@ public class AIController : IPlayerInput
     private void PerformAITurn()
     {
         var allAbilities = _aiUnit.GetAbilities();
-
+        
         var availableAbilities = allAbilities.Where(a => !a.IsOnCooldown()).ToList();
 
+        if (availableAbilities.Count == 0)
+        {
+            Debug.LogWarning("ИИ не нашел доступных способностей, все способности на кулдауне.");
+            return;
+        }
+        
         int randomIndex = _random.Next(availableAbilities.Count);
         var selectedAbility = availableAbilities[randomIndex];
         int abilityIndex = allAbilities.IndexOf(selectedAbility);
-
+        
+        Debug.Log($"ИИ выбрал способность: {selectedAbility.GetName()} (Index: {abilityIndex})");
+        
         OnAbilitySelected?.Invoke(abilityIndex);
     }
 
@@ -35,4 +43,5 @@ public class AIController : IPlayerInput
 
     public void DisableInput() { }
 }
+
 

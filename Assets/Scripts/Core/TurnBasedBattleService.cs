@@ -4,10 +4,10 @@ using UnityEngine;
 
 public sealed class TurnBasedBattleService
 {
-    private IPlayerController _playerController;
-    private IPlayerController _opponentController;
-    private IGameServer _gameServer;
-    private BattleLogService _battleLogService;
+    private readonly IPlayerController _playerController;
+    private readonly IPlayerController _opponentController;
+    private readonly IGameServer _gameServer;
+    private readonly BattleLogService _battleLogService;
     private bool _roundCompleted;
     private bool _isPlayerTurn;
     private bool _battleInProgress;
@@ -20,10 +20,11 @@ public sealed class TurnBasedBattleService
         _battleLogService = battleLogService;
         
         _playerController.PlayerInput.OnAbilitySelected += OnPlayerAbilitySelected;
+        _opponentController.PlayerInput.OnAbilitySelected += OnOpponentAbilitySelected;
 
         _isPlayerTurn = true;
         _battleInProgress = false;
-
+        
         _playerController.UpdateView();
         _opponentController.UpdateView();
         
@@ -55,19 +56,18 @@ public sealed class TurnBasedBattleService
         _battleLogService.LogPlayerAbility("Игрок", selectedAbility.GetName());
 
         _isPlayerTurn = false;
-        DelayExecution(ExecuteOpponentTurn, 1000); 
+        
+        DelayExecution(() => _opponentController.PlayerInput.EnableInput(), 1000);
     }
 
-    private void ExecuteOpponentTurn()
+    private void OnOpponentAbilitySelected(int abilityIndex)
     {
-        _battleLogService.Log("Ход ИИ начался.");
+        if (_isPlayerTurn) return;
 
-        var aiAbilities = _opponentController.GetUnit().GetAbilities();
-        var randomAbilityIndex = UnityEngine.Random.Range(0, aiAbilities.Count);
-        var selectedAbility = aiAbilities[randomAbilityIndex];
+        var selectedAbility = _opponentController.GetUnit().GetAbilities()[abilityIndex];
         _gameServer.ApplyAbility(_opponentController, _playerController, selectedAbility);
-
-        _battleLogService.LogAIAbility(selectedAbility.GetName()); 
+        
+        _battleLogService.LogAIAbility(selectedAbility.GetName());
 
         if (!_roundCompleted)
         {
@@ -99,3 +99,5 @@ public sealed class TurnBasedBattleService
         action?.Invoke();
     }
 }
+
+
